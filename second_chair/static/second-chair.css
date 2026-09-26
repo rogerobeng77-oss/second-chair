@@ -1,9 +1,9 @@
 /* Second Chair, restyled to read as Clearance.
-   Second pass. The first pass (see docs/REDESIGN.md) treated Clearance as a loose
-   structural hint and kept this app's own palette and shell. Overruled. This file now
-   takes Clearance's actual tokens: the same hex values, the same 224px rail, the same
-   type scale, the same card/table/pill treatment — read straight out of
-   agentic-cinema/clearance/web/app.css, not approximated.
+   Second pass. The first pass treated Clearance as a loose structural hint and kept
+   this app's own palette and shell. Overruled. This file now takes Clearance's actual
+   tokens: the same hex values, the same 224px rail, the same type scale, the same
+   card/table/pill treatment — read straight out of Clearance's own stylesheet, not
+   approximated.
 
    What is genuinely new here (Second Chair has content Clearance has no view for: a
    consent ledger, a medicine dose comparison, a replay stream, a question list) is built
