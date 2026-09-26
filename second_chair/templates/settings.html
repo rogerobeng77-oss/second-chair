@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% set seal_mark = 'Settings' %}
+{% set seal_what = 'Four switches, each of which changes what the product does.' %}
+{% block title %}Second Chair: Settings{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">{{ 'Saved' if saved else 'Configure' }}</p>
+  <h1>Settings</h1>
+  <p class="standfirst">Nothing here is cosmetic. Each one would change the answer to a
+  question somebody actually has.</p>
+  {% if saved %}<div class="card card--note" style="text-align:left;max-width:60ch;margin-left:auto;margin-right:auto"><p style="margin:0">Saved. The appointment will
+  be derived again with these settings the next time you open the record.</p></div>{% endif %}
+</div>
+
+<section class="block">
+<form method="post" action="/settings">
+  <div class="cards">
+  <div class="card">
+    <div class="field">
+      <label for="jurisdiction">State</label>
+      <input id="jurisdiction" type="text" name="jurisdiction" value="{{ settings.jurisdiction }}" maxlength="2">
+      <p class="help">{{ settings.jurisdiction_note }}</p>
+    </div>
+    <div class="field field--check">
+      <input id="strict" type="checkbox" name="strict_all_party" {% if settings.strict_all_party %}checked{% endif %}>
+      <div>
+        <label for="strict">Use the strict all-party rule everywhere</label>
+        <p class="help">On by default. With it on, an announcement with no recorded answer
+        keeps nothing, in every state. Turning it off means one-party states fall back to
+        the wearer's own consent, which is lawful there and is still a choice you should
+        have to make deliberately.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="retention">Destroy the words after</label>
+      <input id="retention" type="number" name="retention_days" min="1" max="365" value="{{ settings.retention_days }}">
+      <p class="help">Days. The consent ledger outlives this. Shorter is safer; the reason
+      it is not one day by default is that a family argument about what was said tends to
+      happen in week three.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field field--check">
+      <input id="share" type="checkbox" name="share_enabled" {% if settings.share_enabled %}checked{% endif %}>
+      <div>
+        <label for="share">Allow a family summary to be produced</label>
+        <p class="help">The announcement in the room asked about recording, not about
+        forwarding. Somebody who does not want their appointment relayed should be able to
+        say so once, here, rather than every time.</p>
+      </div>
+    </div>
+    <div class="field">
+      <label for="relname">Who it is addressed to</label>
+      <input id="relname" type="text" name="relative_name" value="{{ settings.relative_name }}">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="tier">Amazon Bedrock</label>
+      <select id="tier" name="model_tier">
+        <option value="off" {% if settings.model_tier == 'off' %}selected{% endif %}>Off. Show the record, do not write a recap</option>
+        <option value="fast" {% if settings.model_tier == 'fast' %}selected{% endif %}>Sonnet. Recap and medicine rows</option>
+        <option value="judgement" {% if settings.model_tier == 'judgement' %}selected{% endif %}>Opus. Slower, better at &ldquo;partly covered&rdquo;</option>
+      </select>
+      <p class="help">Off is a supported configuration, not a broken one. Try it with the
+      network unplugged. The medicine rows and the question list are rebuilt from written
+      rules, still tied to the words that were used. The recap is not rebuilt at all: the
+      page says no recap was written and shows you the record instead, because a summary
+      of a medical appointment assembled by rule is worse than no summary.</p>
+    </div>
+  </div>
+  </div>
+
+  <button class="btn" type="submit">Save</button>
+</form>
+</section>
+{% endblock %}

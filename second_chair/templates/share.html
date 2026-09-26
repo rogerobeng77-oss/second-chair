@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% set seal_mark = 'A narrower copy' %}
+{% set seal_what = 'Medicine rows, dates and what was missed. No transcript goes into this document.' %}
+{% block title %}Second Chair: For your family{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">For the person who could not come</p>
+  <h1>{{ summary.appointment_label if summary else 'Family summary' }}</h1>
+  <p class="standfirst">{{ summary.appointment_date if summary }}</p>
+</div>
+
+{% if not granted %}
+<section class="block">
+  <div class="attn">
+    <h2>Nothing to share.</h2>
+    <p style="margin:0">Consent was not recorded in this room, so there is no record to narrow.</p>
+  </div>
+</section>
+{% elif not enabled %}
+<section class="block">
+  <div class="empty"><p>Sharing is switched off.</p>
+  <p class="footnote">Turn it back on in settings. It is off per person, not per appointment,
+  so a decision only has to be made once.</p>
+  <p style="margin-top:1rem"><a class="btn btn--ghost" href="/settings">Settings</a></p></div>
+</section>
+{% else %}
+
+<section class="block">
+  <div class="card card--note">
+    <p class="label">Read this first</p>
+    <p style="margin:0">{{ summary.disclaimer }}</p>
+  </div>
+</section>
+
+<section class="block">
+  <p class="label">Medicines</p>
+  <h2>What was said, and the words that were used</h2>
+  {% for l in summary.lines %}
+  <div class="card">
+    <p class="label">{{ l.heading }}</p>
+    <p class="lede" style="margin:.1rem 0 0;text-align:left;max-width:none">{{ l.body }}</p>
+    <p class="quote">&ldquo;{{ l.quote }}&rdquo;</p>
+  </div>
+  {% else %}
+  <div class="empty"><p>Nothing was said about a medicine.</p></div>
+  {% endfor %}
+</section>
+
+{% if summary.not_covered %}
+<section class="block">
+  <p class="label">Loose ends</p>
+  <h2>Written down beforehand, not covered in the room</h2>
+  <div class="card">
+    <ul style="margin:0;padding-left:1.1rem">
+      {% for q in summary.not_covered %}<li>{{ q }}</li>{% endfor %}
+    </ul>
+  </div>
+  <p class="footnote">In the order they were marked important by the person who wrote them.
+  Second Chair does not rank anybody's questions for them.</p>
+</section>
+{% endif %}
+
+<section class="block">
+  <p class="label label--quiet">Housekeeping</p>
+  <h2>This copy stops working on {{ summary.expires_at }}</h2>
+  <div class="card">
+    <p>{{ summary.disclaimer }}</p>
+    <p style="margin-top:.9rem;margin-bottom:0"><a class="btn" href="/share.txt">Plain text, to paste into a message</a></p>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

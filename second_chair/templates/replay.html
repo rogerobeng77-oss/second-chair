@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% set seal_mark = 'Sealed' %}
+{% set seal_what = 'The gate is shut. Nothing below is retained until the announcement and an answer have both been recorded.' %}
+{% set seal_class = 'seal--pending' %}
+{% block title %}Second Chair: Replay{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">Announce first</p>
+  <h1>Watch the gate</h1>
+  <p class="standfirst">Every utterance Bee would have delivered, in the order and at the
+  pace it arrived. The band at the top of this page stays amber until the announcement has
+  been recorded and an answer to it has been recorded. Change the answer and run it again.</p>
+</div>
+
+<section class="block">
+  <div class="card">
+    <div class="field">
+      <label for="answer">What the room says back</label>
+      <select id="answer">
+        <option value="">Yes that's fine, lots of people do that now. (what the fixture holds)</option>
+        <option value="No, I'd rather you didn't record this.">No, I'd rather you didn't record this.</option>
+        <option value="Hm. Right, where were we.">Hm. Right, where were we. (no answer at all)</option>
+      </select>
+      <p class="help">Cal. Penal Code 632(b) excludes from &ldquo;person&rdquo; anyone known by
+      all parties to be recording. RCW 9.73.030(3) says the announcement itself must be
+      recorded. Both of those are running below, not described.</p>
+    </div>
+    <button class="btn" id="run">Run the appointment</button>
+    <button class="btn btn--ghost" id="fast">Skip to the end</button>
+    <p class="help" id="applied" role="status" aria-live="polite">Running it here runs
+    it for real: the record on the front page is rebuilt from the answer above, so the
+    two screens can never disagree about what was kept.</p>
+  </div>
+</section>
+
+<section class="block">
+  <p class="label">The stream</p>
+  <h2 id="verdict">Not started</h2>
+  <div class="gate" id="gate" hidden>
+    <p class="label">The consent record, pinned</p>
+    <div class="ev ev--announcement"><span class="ev__tag">Announcement</span>
+      <div><p class="ev__text" id="gate-a"></p></div></div>
+    <div class="ev ev--response"><span class="ev__tag">The answer</span>
+      <div><p class="ev__text" id="gate-r"></p></div></div>
+  </div>
+  <div class="stage" id="stage" aria-live="polite"><p class="help">Press
+    &ldquo;Run the appointment&rdquo; above and the utterances arrive here at the pace
+    Bee delivered them, each one tagged with what the gate did to it.</p></div>
+  <p class="provenance" id="outcome" hidden></p>
+  <p class="provenance"><b>Speaker labels:</b> every one reads <code>Unknown</code>, which is
+  what Bee's own sample output shows. Nothing on this page branches on it.</p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const stage = document.getElementById('stage');
+const verdict = document.getElementById('verdict');
+const seal = document.querySelector('.seal');
+const mark = document.querySelector('.seal__mark');
+const what = document.querySelector('.seal__what');
+let timer = null;
+
+const TAG = {
+  dropped: 'Not kept',
+  announcement: 'Announcement',
+  response: 'The answer',
+  kept: 'Kept',
+};
+
+function setSeal(cls, m, w) {
+  seal.className = 'seal ' + cls;
+  mark.textContent = m;
+  what.textContent = w;
+}
+
+function pin(ev) {
+  const box = document.getElementById('gate');
+  box.hidden = false;
+  document.getElementById(ev.status === 'announcement' ? 'gate-a' : 'gate-r').textContent = ev.text;
+}
+
+function render(ev) {
+  const row = document.createElement('div');
+  row.className = 'ev ev--' + ev.status;
+  row.innerHTML =
+    '<span class="ev__tag">' + TAG[ev.status] + '</span>' +
+    '<div><p class="ev__text"><span class="speaker"></span></p>' +
+    '<p class="ev__why"></p></div>';
+  row.querySelector('.speaker').textContent = ev.speaker;
+  row.querySelector('.ev__text').append(document.createTextNode(ev.text));
+  row.querySelector('.ev__why').textContent = ev.why;
+  stage.append(row);
+  stage.scrollTop = stage.scrollHeight;
+}
+
+function applyGate(ev) {
+  if (ev.status === 'announcement' || ev.status === 'response') pin(ev);
+  if (ev.status === 'announcement') {
+    setSeal('seal--pending', 'Announced', 'The announcement has been made and recorded. Still waiting for an answer.');
+    verdict.textContent = 'Announced, waiting';
+  }
+  if (ev.status === 'response') {
+    const t = ev.text.toLowerCase();
+    if (/\b(no|rather you did|don't|not)\b/.test(t) && !/\bno problem\b/.test(t)) {
+      setSeal('seal--refused', 'Consent refused', 'Everything captured in this room was discarded. This band is the only record that survives.');
+      verdict.textContent = 'Refused. Nothing kept.';
+      return false;
+    }
+    if (/\b(yes|fine|of course|go ahead|sure|alright)\b/.test(t)) {
+      setSeal('', 'Consent recorded', 'Announced out loud, and the answer was recorded. The record may now be written.');
+      verdict.textContent = 'Granted. The record may be written.';
+      return true;
+    }
+    setSeal('seal--pending', 'No answer recorded', 'The announcement was recorded but no answer was, so nothing is retained.');
+    verdict.textContent = 'No answer. Nothing kept.';
+    return false;
+  }
+  return null;
+}
+
+async function run(instant) {
+  clearTimeout(timer);
+  stage.innerHTML = '';
+  document.getElementById('gate').hidden = true;
+  document.getElementById('gate-a').textContent = '';
+  document.getElementById('gate-r').textContent = '';
+  setSeal('seal--pending', 'Sealed', 'The gate is shut. Nothing is retained yet.');
+  verdict.textContent = 'Running';
+  const answer = document.getElementById('answer').value;
+  const outcome = document.getElementById('outcome');
+  outcome.textContent = 'Rebuilding the record on the front page with this answer…';
+  outcome.hidden = false;
+  // Started here rather than awaited here: it re-ingests the appointment, which
+  // on the granted branch means a Bedrock call, and the stream should not wait
+  // on it. It is awaited at the end of the run, before this page offers a link
+  // to the record, so the two can never disagree about what was kept.
+  //
+  // `/api/replay` itself is a read and changes nothing, which is how this page
+  // came to show CONSENT REFUSED while `/` showed CONSENT RECORDED and the
+  // whole transcript.
+  const applied = fetch('/api/rerun', {
+    method: 'POST',
+    body: new URLSearchParams({answer: answer}),
+  });
+  const res = await fetch('/api/replay?answer=' + encodeURIComponent(answer));
+  const data = await res.json();
+  let allowed = null;
+  let i = 0;
+  const step = async () => {
+    if (i >= data.events.length) {
+      if (allowed === false) verdict.textContent += ' Record discarded.';
+      else if (allowed) verdict.textContent = 'Finished. ' + stage.querySelectorAll('.ev--kept').length + ' lines kept.';
+      await applied;
+      outcome.innerHTML = allowed
+        ? 'The record has been written. <a href="/">Open it</a>.'
+        : 'Nothing was kept. <a href="/">The front page</a> now holds the consent ledger and nothing else.';
+      return;
+    }
+    const ev = data.events[i++];
+    if (allowed === false && ev.status === 'kept') {
+      ev.status = 'dropped';
+      ev.why = 'discarded: consent was refused in this room';
+    }
+    render(ev);
+    const gate = applyGate(ev);
+    if (gate !== null) allowed = gate;
+    timer = setTimeout(step, instant ? 0 : 520);
+  };
+  step();
+}
+
+document.getElementById('run').addEventListener('click', () => run(false));
+document.getElementById('fast').addEventListener('click', () => run(true));
+</script>
+{% endblock %}

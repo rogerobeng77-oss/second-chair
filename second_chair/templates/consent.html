@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set c = consent %}
+{% set cd = c.as_dict() %}
+{% set seal_class = 'seal--refused' if c.state.value == 'refused' else ('' if c.state.value == 'granted' else 'seal--pending') %}
+{% set seal_mark = {'granted':'Consent recorded','refused':'Consent refused','unanswered':'No answer recorded','pending':'Nothing announced'}[c.state.value] %}
+{% set seal_what = 'The first artefact of the appointment, written before a single other word was kept.' %}
+{% block title %}Second Chair: Consent ledger{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">The first artefact</p>
+  <h1>Consent ledger</h1>
+  <p class="standfirst">Written before the transcript, kept after it. If the words in the
+  room are ever destroyed, this page is what is left.</p>
+</div>
+
+<section class="block">
+  <p class="label">What was announced</p>
+  <h2>Out loud, at {{ cd.announced_at[11:19] if cd.announced_at }}</h2>
+  {% if c.announcement_text %}
+  <div class="card">
+    <p class="lede" style="text-align:left;max-width:none">&ldquo;{{ c.announcement_text }}&rdquo;</p>
+    <p class="provenance"><b>RCW 9.73.030(3):</b> consent may be obtained by announcing
+    &ldquo;in any reasonably effective manner&rdquo;, provided &ldquo;said announcement shall
+    also be recorded&rdquo;. It is. That is this row.</p>
+  </div>
+  {% else %}
+  <div class="empty"><p>No announcement was recorded in this session.</p></div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <p class="label">What came back</p>
+  <h2>{{ seal_mark }}</h2>
+  {% if c.response_text %}
+  <div class="card {{ 'card--stop' if c.state.value != 'granted' }}">
+    <p class="lede" style="text-align:left;max-width:none">&ldquo;{{ c.response_text }}&rdquo;</p>
+    <p class="footnote">Recorded at {{ cd.responded_at[11:19] if cd.responded_at }}.</p>
+  </div>
+  {% else %}
+  <div class="empty"><p>No response was recorded.</p></div>
+  {% endif %}
+  <div class="card card--flag">
+    <p class="label">Who said it</p>
+    <p style="margin:0">Not recorded, and not guessed. Bee labels every speaker
+    <code>Unknown</code>. The statutory test in 632(b) is whether the recording was
+    <em>known by all parties</em>, which the announcement and a recorded answer to it
+    evidence. Whose mouth the answer came from is a different question, and Second Chair
+    does not have the hardware to answer it, so it does not pretend to.</p>
+  </div>
+</section>
+
+<section class="block">
+  <p class="label">The position being taken</p>
+  <h2>Why this is lawful, in one paragraph</h2>
+  <div class="card">
+    <p>{{ c.basis }}</p>
+  </div>
+  <div class="card card--note">
+    <p class="label">Cal. Penal Code 632(b)</p>
+    <p style="margin:0">&ldquo;Person&rdquo; <em>excludes an individual known by all parties
+    to a confidential communication to be overhearing or recording the communication.</em>
+    California does not prohibit recording. It prohibits secret recording.</p>
+  </div>
+  <div class="tbl" style="margin-top:12px">
+  <table>
+    <tr><th>Jurisdiction</th><td>{{ c.jurisdiction }}. {{ settings.jurisdiction_note }}</td></tr>
+    <tr><th>Room</th><td><code>{{ c.conversation_uuid }}</code>, one Bee conversation, with a start and an end fixed before capture</td></tr>
+    <tr><th>Policy</th><td>{{ c.institution_policy }}</td></tr>
+    <tr><th>Media held</th><td>Text only. No audio file is written by any code path in this application.</td></tr>
+    <tr><th>Expires</th><td>{{ row.expires_at[:10] if row }} ({{ row.days_left if row }} days). The transcript goes; this ledger stays.</td></tr>
+  </table>
+  </div>
+</section>
+
+<section class="block">
+  <p class="label label--quiet">Rule three</p>
+  <h2>What was heard and thrown away</h2>
+  <p class="standfirst">Room-scoped, not life-scoped. Anything Bee filed under a different
+  conversation never reached the pipeline.</p>
+  <div class="card">
+    {% for dd in dropped %}
+    <div class="ev ev--dropped">
+      <span class="ev__tag">Not kept</span>
+      <div>
+        <p class="ev__text"><span class="speaker">{{ dd.utterance.speaker }}</span>{{ dd.utterance.text }}</p>
+        <p class="ev__why">{{ dd.reason }}</p>
+      </div>
+    </div>
+    {% else %}
+    <p class="footnote">Nothing was dropped in this session.</p>
+    {% endfor %}
+  </div>
+  <div class="card card--flag">
+    <p class="label">The honest version of rule three</p>
+    <p style="margin:0">The rule says discard segments with no expected speaker present, and
+    the obvious way to do that is voice recognition. Bee cannot do voice recognition and
+    neither can we. So this is scoped on the one boundary the API does give us, the
+    conversation identifier. That is weaker, and it is written here rather than left for
+    someone to discover.</p>
+  </div>
+</section>
+
+<section class="block">
+  <p class="label label--quiet">The part that does not go away</p>
+  <h2>A wearable in a clinic makes health information</h2>
+  <div class="card">
+    <p>45 CFR 164.508(a)(1) means a recording made in a consulting room on a consumer
+    device sits outside the covered entity's control. Second Chair cannot solve that, and
+    an app that claimed to would be lying. What it does instead is refuse to become the
+    record:</p>
+    <ul>
+      <li>the transcript has an expiry and the clock is on the front page;</li>
+      <li>any row can be overruled by what the clinic's own summary says, and the
+      correction is what exports;</li>
+      <li>the export and the family summary both open and close by saying the clinic's
+      document is the one that counts;</li>
+      <li>nothing is sent anywhere except the model call that writes the recap, and that
+      can be switched off in settings with every page still working.</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

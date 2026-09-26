@@ -1,0 +1,674 @@
+/* Second Chair, restyled to read as Clearance.
+   Second pass. The first pass (see docs/REDESIGN.md) treated Clearance as a loose
+   structural hint and kept this app's own palette and shell. Overruled. This file now
+   takes Clearance's actual tokens: the same hex values, the same 224px rail, the same
+   type scale, the same card/table/pill treatment — read straight out of
+   agentic-cinema/clearance/web/app.css, not approximated.
+
+   What is genuinely new here (Second Chair has content Clearance has no view for: a
+   consent ledger, a medicine dose comparison, a replay stream, a question list) is built
+   from Clearance's own tokens and shapes rather than invented from scratch: the four
+   severity colours it already ships (high/medium/low/none) map onto this app's own
+   refused/flagged/neutral/granted states one-for-one, so nothing here is a new colour. */
+
+/* Inter, self-hosted: see ATTRIBUTION.md. Clearance itself loads Inter from
+   fonts.googleapis.com at runtime; vendoring it here means the face still renders on a
+   judge's machine with no path to that CDN, which is a real defect independent of which
+   design is being followed. */
+@font-face {
+  font-family: "Inter";
+  src: url("/static/fonts/inter-400-700.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/static/fonts/inter-400italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* Clearance's own values, taken as-is. */
+  --ink: #12151B;
+  --body: #41474F;
+  --muted: #818A96;
+  --line: #E6E8EC;
+  --page: #FBFBFC;
+  --card: #FFFFFF;
+  --brand: #2A4B8D;
+  --brand-soft: #EEF2FA;
+  --high: #C0362C;
+  --high-soft: #FBEDEB;
+  --medium: #B4700E;
+  --medium-soft: #FDF3E4;
+  --low: #4A5563;
+  --low-soft: #F1F3F6;
+  --none: #2F7A5A;
+  --none-soft: #ECF6F1;
+
+  /* Second Chair's four states map onto Clearance's severities one-for-one:
+     granted -> none (settled, clean), pending/flag -> medium, refused/stop -> high,
+     quiet/neutral metadata -> low. Named locally so the templates below read by what
+     they mean, not by which of Clearance's four colours it happens to be. */
+  --granted: var(--none);
+  --granted-soft: var(--none-soft);
+  --flag: var(--medium);
+  --flag-soft: var(--medium-soft);
+  --refused: var(--high);
+  --refused-soft: var(--high-soft);
+  --quiet: var(--low);
+  --quiet-soft: var(--low-soft);
+
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --rail: 224px;
+  --content: 860px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--card);
+  color: var(--ink);
+  font: 15px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font: inherit; cursor: pointer; }
+a { color: var(--brand); }
+
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible {
+  outline: 3px solid var(--medium);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------------- the shell
+   Clearance's `.app { grid-template-columns: 224px 1fr }`, taken directly. The previous
+   pass argued a fixed rail does not suit a patient holding a phone and built a sticky
+   top band instead; that argument is overruled. The rail collapses at phone width
+   below, which is a layout rule, not a reason to not have one. */
+
+.app { display: grid; grid-template-columns: var(--rail) 1fr; min-height: 100vh; }
+
+.side {
+  border-right: 1px solid var(--line);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--card);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: 2px 6px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.brand i {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--brand);
+  display: block;
+  flex: none;
+}
+
+.nav { display: flex; flex-direction: column; gap: 1px; }
+.nav a {
+  background: none;
+  border: 0;
+  text-align: left;
+  padding: 8px 11px;
+  border-radius: 7px;
+  color: var(--body);
+  width: 100%;
+  display: block;
+  font-weight: 500;
+  text-decoration: none;
+  font-size: 14px;
+}
+.nav a:hover { background: #F5F6F8; }
+.nav a[aria-current="page"] { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+
+.rule { height: 1px; background: var(--line); margin: 4px 0; border: 0; }
+
+.side footer { margin-top: auto; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* mobile nav: a native disclosure, since Clearance's own app.css has no breakpoint to
+   read a mobile pattern from. Same tokens, no JS. */
+.nav-toggle { display: none; }
+
+/* ------------------------------------------------------------------------- top + state
+   Clearance's `.top` (a chip, an avatar) and `.banner` (a fixed one-line disclaimer),
+   taken as two stacked bars. Second Chair's consent state used to live in a sticky
+   "seal" band across the whole page; it now lives here, in the same two components,
+   recoloured per state using the severity tokens above instead of invented ones. Kept
+   under the name `.seal` (and its `__mark`/`__what`/`__quote` children) because
+   templates/replay.html drives this element's class and text from JS at runtime and
+   nothing about that script needed to change to get here. */
+
+.main { display: flex; flex-direction: column; min-width: 0; background: var(--page); }
+
+.seal { border-bottom: 1px solid var(--line); background: var(--card); position: sticky; top: 0; z-index: 40; }
+
+.seal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 22px;
+}
+
+.seal__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  background: var(--granted-soft);
+  color: var(--granted);
+  white-space: nowrap;
+}
+.seal--pending .seal__mark { background: var(--flag-soft); color: var(--flag); }
+.seal--refused .seal__mark { background: var(--refused-soft); color: var(--refused); }
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 0;
+  text-decoration: none;
+  flex: none;
+}
+.avatar:hover { filter: brightness(1.15); }
+
+.seal__banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  background: var(--granted-soft);
+  color: var(--ink);
+  padding: 9px 22px;
+  font-size: 13px;
+  border-top: 1px solid var(--line);
+}
+.seal--pending .seal__banner { background: var(--flag-soft); }
+.seal--refused .seal__banner { background: var(--refused-soft); }
+
+.seal__what { color: var(--body); }
+
+.seal__quote {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink);
+  flex: 1 1 260px;
+}
+
+/* -------------------------------------------------------------------------- the body
+   Clearance's `.body { padding:30px 22px 60px; max-width:1120px; margin:0 auto }`. This
+   app's content is a document, not a dashboard, so the max-width is narrower —
+   Clearance's own reading-width component (`.attn p { max-width:88ch }`) makes the same
+   call for its one block of prose; applied here to the whole column instead of one
+   paragraph, because every section is prose. */
+
+.body {
+  padding: 28px 24px 64px;
+  max-width: var(--content);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-head { text-align: center; margin: 6px 0 30px; }
+.page-head .label { display: block; }
+.page-head .standfirst { margin-left: auto; margin-right: auto; }
+
+h1 {
+  font-size: 27px;
+  letter-spacing: -0.03em;
+  margin: 14px 0 8px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 auto;
+  max-width: 60ch;
+}
+
+.block { margin: 0 0 40px; }
+.block:last-of-type { margin-bottom: 0; }
+
+.label {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand);
+  margin: 0 0 6px;
+}
+.label--quiet { color: var(--quiet); }
+.card--stop .label { color: var(--refused); }
+.card--flag .label { color: var(--flag); }
+
+h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 10px; line-height: 1.25; }
+h3 { font-size: 14px; font-weight: 650; margin: 0 0 6px; }
+
+.standfirst { color: var(--body); font-size: 14px; margin: 0 0 16px; max-width: 68ch; }
+
+/* --------------------------------------------------------------------------- cards
+   Clearance's card weight, taken as-is: 1px solid var(--line), radius in the 10-12px
+   band, 14-17px padding, flat. `.card--stop`/`--flag`/`--note` recolour it with the
+   severity tokens; nothing about the border/radius/padding changes between them. */
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 15px 17px;
+  margin: 0 0 12px;
+}
+.card:last-child { margin-bottom: 0; }
+
+.card--flag { border-color: #EFE0CB; background: var(--flag-soft); }
+.card--stop { border-color: #EBD4D0; background: var(--refused-soft); }
+.card--note { border-color: #CFE6DA; background: var(--granted-soft); }
+
+/* the one moment per page that deserves Clearance's own big callout treatment
+   (`.attn`): the record refusing to exist because consent was refused. */
+.attn {
+  border: 1px solid #EBD4D0;
+  background: var(--high-soft);
+  border-radius: 11px;
+  padding: 17px 19px;
+  margin: 0 0 20px;
+}
+.attn .label { color: var(--high); margin-bottom: 3px; }
+.attn h2 { margin: 0 0 8px; }
+.attn p { margin: 0 0 12px; color: #5A4340; max-width: 88ch; }
+.attn p:last-child { margin-bottom: 0; }
+
+/* Two grid weights, taken directly from Clearance's `.cards` / `.grid3`: not one grid
+   for everything, chosen by what the card holds. Reflows to one column under its own
+   minmax at phone width, same as the rail does. The medicine list, the recap and the
+   question list stay full width on purpose — that content needs the room and is the
+   app's own identity, not administrative metadata. */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 11px; margin: 0 0 12px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 11px; margin: 0 0 12px; }
+.cards > .card, .grid3 > .card { margin: 0; }
+
+.quote {
+  font-style: italic;
+  color: var(--body);
+  border-left: 2px solid var(--line);
+  padding-left: 12px;
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+
+.cite {
+  font-size: 11px;
+  color: var(--muted);
+  vertical-align: super;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------- medicine rows */
+
+.med { display: grid; grid-template-columns: auto 1fr; gap: 0 14px; align-items: baseline; }
+
+.chip {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.chip--down { background: var(--brand-soft); color: var(--brand); }
+.chip--up   { background: var(--medium-soft); color: var(--medium); }
+.chip--stop { background: var(--high-soft); color: var(--high); }
+.chip--same { background: var(--low-soft); color: var(--low); }
+.chip--unclear { background: var(--medium-soft); color: var(--medium); }
+
+.dose {
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 500;
+}
+.dose s { color: var(--muted); text-decoration-thickness: 1px; }
+.dose strong { color: var(--brand); }
+
+.med__body { grid-column: 2; }
+.med__name { font-size: 16px; font-weight: 650; margin: 0 0 2px; }
+
+/* -------------------------------------------------------------------- question list */
+
+.q { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.q:last-child { border-bottom: 0; }
+.q__mark { flex: none; width: 18px; font-weight: 700; }
+.q--covered .q__mark { color: var(--none); }
+.q--partly .q__mark { color: var(--medium); }
+.q--missed .q__mark { color: var(--high); }
+.q__text { margin: 0; font-size: 14px; }
+.q__meta { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+.q__important {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--medium);
+  border: 1px solid var(--medium);
+  border-radius: 999px;
+  padding: 0 7px;
+  margin-left: 6px;
+}
+
+/* --------------------------------------------------------------------------- forms */
+
+input[type="text"], input[type="number"], input[type="search"], select, textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  width: 100%;
+}
+
+.btn, .primary {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.btn:hover, .primary:hover { filter: brightness(1.08); }
+.btn:disabled, .primary:disabled { opacity: 0.5; cursor: default; filter: none; }
+
+.btn--ghost { background: transparent; color: var(--brand); border: 1px solid var(--line); }
+.btn--stop { background: var(--high); }
+
+.field { margin: 0 0 16px; }
+.field label { display: block; font-size: 13px; font-weight: 650; margin-bottom: 5px; }
+.field .help { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+.field--check { display: flex; gap: 10px; align-items: flex-start; }
+.field--check input { width: auto; margin-top: 4px; }
+
+/* ------------------------------------------------------------------------ ask bar
+   Clearance's `.ask` hero input, taken as-is (border, radius, ambient shadow) but kept
+   fixed to the bottom of the viewport rather than sitting once at the top of one view:
+   Second Chair's ask bar is available on every page, which `.ask` in Clearance never
+   needed to be. */
+
+.askbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 50;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -1px 2px rgba(16, 24, 40, 0.04);
+}
+.askbar form {
+  max-width: calc(var(--rail) + var(--content) + 48px);
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.askbar input { flex: 1; }
+
+/* ------------------------------------------------------------------------- replay */
+
+.gate {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--medium);
+  border-radius: 11px 11px 0 0;
+  border-bottom: 0;
+  padding: 14px 16px 6px;
+}
+.gate .label { margin-bottom: 8px; }
+
+.stage {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  min-height: 19rem;
+  max-height: 27rem;
+  overflow-y: auto;
+  padding: 14px 16px;
+}
+
+.ev { padding: 8px 0; border-bottom: 1px dashed var(--line); display: flex; gap: 12px; }
+.ev:last-child { border-bottom: 0; }
+.ev__tag {
+  flex: none;
+  width: 6.4rem;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding-top: 3px;
+  color: var(--muted);
+}
+.ev__text { margin: 0; font-size: 14px; }
+.ev__why { font-size: 12px; color: var(--muted); margin: 3px 0 0; }
+/* Not opacity. Explicit colours, both measured against --card (#fff): 6.1:1 and 4.8:1
+   respectively, clearing the 4.5:1 a 12-14px label needs. The discard pile is real
+   content: it is the section arguing that you can see what was thrown away. */
+.ev--dropped .ev__text { color: var(--body); text-decoration: line-through; text-decoration-color: var(--muted); }
+.ev--dropped .ev__why { color: var(--muted); }
+.ev--dropped .ev__tag { color: var(--muted); }
+.ev--dropped .speaker { text-decoration: none; display: inline-block; }
+.ev--announcement .ev__tag { color: var(--medium); }
+.ev--announcement .ev__text { font-weight: 650; }
+.ev--response .ev__tag { color: var(--brand); }
+.ev--kept .ev__tag { color: var(--body); }
+
+.speaker {
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 5px;
+  margin-right: 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------ tables */
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card); }
+.tbl { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+th { text-align: left; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 9px 16px; border-bottom: 1px solid var(--line); }
+td { padding: 11px 16px; border-bottom: 1px solid #F2F4F6; vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.n { font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* -------------------------------------------------------------------- odds and ends */
+
+.provenance {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+.provenance b { color: var(--body); font-weight: 650; }
+
+.mocknote {
+  font-size: 12.5px;
+  color: var(--body);
+  background: var(--medium-soft);
+  border: 1px dashed var(--medium);
+  border-radius: 8px;
+  padding: 11px 14px;
+  margin: 26px 0 0;
+}
+
+.empty {
+  color: var(--body);
+  background: var(--page);
+  border: 1px dashed var(--line);
+  border-radius: 11px;
+  padding: 24px 18px;
+  text-align: center;
+}
+.empty p { margin: 5px 0; }
+
+.footnote { font-size: 13px; color: var(--body); }
+
+details.more { margin-top: 10px; }
+details.more summary {
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--brand);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+hr.rule { border: 0; border-top: 1px solid var(--line); margin: 32px 0 0; }
+
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 1rem; top: 0.5rem; position: fixed; z-index: 99; background: var(--card); padding: 10px 16px; border-radius: 8px; box-shadow: 0 4px 14px rgba(16,24,40,.16); }
+
+/* ---------------------------------------------------------------- phone-width collapse
+   Clearance's own app.css has no breakpoint at all, so there is no reference value to
+   take for this. The rule is the same one used above: same tokens, same border/radius
+   language, a plain CSS disclosure instead of a redesign. */
+
+@media (max-width: 46.25rem) {
+  :root { --rail: auto; }
+  .app { display: block; }
+
+  .side {
+    position: sticky;
+    top: 0;
+    z-index: 45;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+  .side .rule { display: none; }
+  .side footer { display: none; }
+  .nav { display: none; }
+  .brand { min-width: 0; flex: 0 1 auto; }
+  .brand__text { display: none; }
+
+  .nav-toggle { display: block; position: relative; min-width: 0; flex: 0 1 auto; }
+  .nav-toggle summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--body);
+    max-width: 100%;
+  }
+  .nav-toggle__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 46vw;
+  }
+  .nav-toggle summary::-webkit-details-marker { display: none; }
+  .nav-toggle summary::after { content: "\2304"; margin-left: 2px; color: var(--muted); }
+  .nav-toggle[open] summary::after { content: "\2303"; }
+  .nav-toggle .nav {
+    display: flex;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 13rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 6px;
+    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.14);
+    z-index: 50;
+  }
+
+  .seal__top, .seal__banner { padding-left: 14px; padding-right: 14px; }
+  .body { padding: 22px 14px 60px; }
+  h1 { font-size: 22px; }
+  .cards, .grid3 { grid-template-columns: 1fr; }
+  .ev__tag { width: 4.6rem; }
+  .med { grid-template-columns: 1fr; }
+  .med__body { grid-column: 1; }
+  .askbar form { padding: 10px 14px; }
+}
+
+@media print {
+  .side, .seal__top, .askbar, .btn, .primary, .mocknote { display: none; }
+  .app { display: block; }
+  body { background: #fff; }
+  .seal { position: static; }
+  .seal__banner { background: #fff; border-top: 0; }
+}
+
+/* Visible to a screen reader, not to the eye. */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set seal_mark = 'History' %}
+{% set seal_what = 'Every appointment still held, with the clock on each one.' %}
+{% block title %}Second Chair: History{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">Kept, and for how long</p>
+  <h1>History</h1>
+  <p class="standfirst">The transcript expires. The consent ledger does not, because it is
+  the evidence that the expiry happened.</p>
+</div>
+
+<section class="block">
+  <p class="label">Search</p>
+  <h2>Across everything still held</h2>
+  <form method="get" action="/history" style="display:flex;gap:.6rem">
+    <input type="search" name="q" value="{{ q }}" placeholder="bisoprolol, six weeks, pharmacy&hellip;">
+    <button class="btn" type="submit">Search</button>
+  </form>
+  {% if q %}
+    {% if hits %}
+    <div class="card" style="margin-top:1rem">
+      {% for h in hits %}
+      <div class="q">
+        <span class="q__mark" aria-hidden="true">&bull;</span>
+        <div>
+          <p class="q__text">{{ h.text }}</p>
+          <p class="q__meta">{{ h.label }}, {{ h.held_at }}, line {{ h.idx }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty" style="margin-top:1rem"><p>No line in any held transcript contains that.</p></div>
+    {% endif %}
+  {% endif %}
+</section>
+
+<section class="block">
+  <p class="label">Appointments</p>
+  <h2>{{ rows|length }} held</h2>
+  {% if rows %}
+  <div class="cards">
+  {% for r in rows %}
+  <div class="card">
+    <h3>{{ r.label }}</h3>
+    <p class="footnote">{{ r.held_at }}. Consent {{ r.consent.state }}.</p>
+    <p style="margin:.4rem 0 0">
+      {% if r.transcript_purged %}
+        The words were destroyed on the expiry date. The consent ledger and the derived
+        summary remain.
+      {% else %}
+        Transcript held for {{ r.days_left }} more day{{ 's' if r.days_left != 1 }}, then destroyed.
+      {% endif %}
+    </p>
+    <form method="post" action="/forget" style="margin-top:.8rem">
+      <input type="hidden" name="appointment_id" value="{{ r.id }}">
+      <button class="btn btn--stop" type="submit">Destroy everything, including the ledger</button>
+    </form>
+  </div>
+  {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><p>Nothing is held.</p></div>
+  {% endif %}
+  <form method="post" action="/purge" style="margin-top:1rem">
+    <button class="btn btn--ghost" type="submit">Run the expiry sweep now</button>
+  </form>
+</section>
+{% endblock %}

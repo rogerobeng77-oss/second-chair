@@ -1,0 +1,275 @@
+{
+  "_mock": "SYNTHETIC. Not a real consultation, not a real patient, not a real clinician. Hand-written to match the `new-utterance` wire shape Bee's docs show, including the `Unknown` speaker label and the fragmentary utterances. No audio exists for any of this.",
+  "_shape": "GET /v1/conversations/{uuid} plus the new-utterance stream events that built it.",
+  "conversations": [
+    {
+      "id": "conv_7f21c0",
+      "start_time": "2026-09-22T09:00:40Z",
+      "end_time": "2026-09-22T09:14:35Z",
+      "device_status": "CAPTURING",
+      "short_summary": "Cardiology follow-up.",
+      "state": "COMPLETED",
+      "primary_location": null
+    },
+    {
+      "id": "conv_7f21bd",
+      "start_time": "2026-09-22T08:51:10Z",
+      "end_time": "2026-09-22T08:53:02Z",
+      "device_status": "CAPTURING",
+      "short_summary": "Waiting room.",
+      "state": "COMPLETED",
+      "primary_location": null
+    },
+    {
+      "id": "conv_7f21c4",
+      "start_time": "2026-09-22T09:14:40Z",
+      "end_time": "2026-09-22T09:15:31Z",
+      "device_status": "CAPTURING",
+      "short_summary": "Corridor.",
+      "state": "COMPLETED",
+      "primary_location": null
+    }
+  ],
+  "events": [
+    {
+      "conversation_uuid": "conv_7f21bd",
+      "created_at_ms": 1790067070000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "no I've got the card here somewhere, it's in the"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21bd",
+      "created_at_ms": 1790067092000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "they said half nine but it's never half nine is it"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067640000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Before we start, I'm wearing a device that writes down what's said in this room so I can remember it afterwards. It's recording now. Is that alright with you?"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067652000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Yes that's fine, lots of people do that now. Just so you know I'm writing my own notes into your record as well."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067661000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "thank you. Mum, you can sit here."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067680000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "So. The monitor readings came back and the rate's been sitting lower than I'd like, forties overnight, low fifties in the morning."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067699000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "that's when I feel it, in the morning, when I stand up from the bed"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067714000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Right. That fits. So the dizziness you're getting in the mornings, I think that's the bisoprolol rather than the heart rhythm itself."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067731000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "So what I want to do is bring the bisoprolol down from five milligrams to two point five milligrams, one tablet in the morning, starting tomorrow."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067748000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "two point five, so that's half of what she's on"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067755000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Half. The current box is five milligram tablets so take half a tablet until that box runs out, then the pharmacy will give you the two point five strength."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067777000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "The apixaban does not change. Five milligrams twice a day, morning and evening, exactly as you are doing. That one I don't want touched."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067798000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "and the amlodipine, I'm going to stop that altogether. Your blood pressure's been fine without needing it and it's probably contributing to the ankles."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067812000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "stop it completely? not taper it"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067818000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Just stop. Five milligrams is a low dose, you don't need to come off it slowly."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067840000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "and the water tablet, we'll leave that for now"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067849000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "mm"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067866000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "The cholesterol number has crept up so I'm increasing the atorvastatin from twenty milligrams to forty milligrams, same time, at night."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067890000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "does she still need the blood test every month"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067898000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Not monthly, no. We'll do one in six weeks to check the kidney function after the amlodipine stops, and then we can space them out."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067920000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "sorry, six weeks from today or from when the"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067926000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "From today. The receptionist will book it on the way out."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067948000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "and if the dizziness is still there after the change?"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067955000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Then ring the clinic, don't wait for the six weeks. The number's on the appointment letter."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067975000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "I'll write all this on the summary you'll get at reception, and it'll go to your GP tonight."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790067990000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "there was something else I wanted to ask you about, I've forgotten it now"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790068000000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "Ring us if it comes back to you. Six weeks for the bloods, see you in three months."
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c0",
+      "created_at_ms": 1790068470000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "oh and while you're here, my husband wanted me to ask about his own tablets"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c4",
+      "created_at_ms": 1790068480000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "she's in bay four, the one with the"
+      }
+    },
+    {
+      "conversation_uuid": "conv_7f21c4",
+      "created_at_ms": 1790068498000,
+      "utterance": {
+        "speaker": "Unknown",
+        "text": "no he's still waiting on the scan from Tuesday"
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set seal_mark = 'Erased' %}
+{% set seal_class = 'seal--refused' %}
+{% set seal_what = 'This appointment was destroyed at the patient\'s request. Nothing was kept back.' %}
+{% block title %}Second Chair: Erased{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">Gone</p>
+  <h1>There is nothing here</h1>
+  <p class="standfirst">The words, the consent ledger, the corrections and the family
+  summary were all destroyed. This page is not hiding a copy.</p>
+</div>
+
+<section class="block">
+  <div class="attn">
+    <p style="margin:0">Most apps with a delete button quietly rebuild the record from the
+    source the next time you open them. This one does not: the Bee fixture is still
+    sitting there and Second Chair will not read it again until you ask it to.</p>
+  </div>
+  <form method="post" action="/rerun">
+    <button class="btn" name="answer" value="">Ingest the appointment again</button>
+  </form>
+</section>
+{% endblock %}

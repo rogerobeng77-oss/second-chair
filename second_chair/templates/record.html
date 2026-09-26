@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% set c = result.consent %}
+{% set seal_class = 'seal--refused' if c.state.value == 'refused' else ('' if granted else 'seal--pending') %}
+{% set seal_mark = {'granted':'Consent recorded','refused':'Consent refused','unanswered':'No answer recorded','pending':'Nothing announced'}[c.state.value] %}
+{% set seal_what = 'Announced out loud at ' ~ c.as_dict()['announced_at'][11:16] ~ ', and the announcement itself was recorded.' if c.announcement_text else 'No announcement was recorded, so nothing was kept.' %}
+{% block title %}Second Chair: The record{% endblock %}
+
+{% block seal_extra %}
+  {% if c.response_text %}<p class="seal__quote">&ldquo;{{ c.response_text }}&rdquo;</p>{% endif %}
+{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">{{ result.session.label }}</p>
+  <h1>What happened in the room</h1>
+  <p class="standfirst">{{ row.held_at if row else '' }}. Kept as text for {{ row.days_left if row else settings.retention_days }} more days, then the words are destroyed and the consent record stays.</p>
+</div>
+
+{% if not granted %}
+<section class="block">
+  <div class="attn">
+    <p class="label">Nothing kept</p>
+    <h2>Nothing was kept from this appointment.</h2>
+    <p>{{ c.basis }}</p>
+    <p>The consent ledger below is all that exists, and it is kept
+    deliberately: it is the proof that nothing else was.</p>
+    <p style="margin:0"><a class="btn btn--ghost" href="/consent">Open the consent ledger</a></p>
+  </div>
+  <form method="post" action="/rerun">
+    <button class="btn" name="answer" value="">Run it again with the answer that was actually recorded</button>
+  </form>
+</section>
+{% else %}
+
+<section class="block" id="recap">
+  {% if d.recap.from_model %}
+  <p class="label">In plain words</p>
+  <h2>The recap</h2>
+  {% else %}
+  <p class="label label--quiet">No recap</p>
+  <h2>The record, in the words that were used</h2>
+  <div class="card card--flag">
+    <p style="margin:0">{{ d.recap.no_recap_notice }}</p>
+  </div>
+  {% endif %}
+
+  {% if d.recap.sentences %}
+  <div class="card">
+    {% for s in d.recap.sentences %}
+      {% if d.recap.from_model %}
+      <p class="lede" style="margin:0 0 .6rem;text-align:left;max-width:none">{{ s }}</p>
+      {% else %}
+      <p class="quote" style="margin:0 0 .8rem;font-size:1.05rem">{{ s }}</p>
+      {% endif %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><p>No sentence survived the check against the transcript.</p>
+  <p class="footnote">That is a result, not a bug. Nothing goes on this page that the recording does not carry.</p></div>
+  {% endif %}
+  <p class="provenance"><b>How this was made:</b> {{ d.recap.provenance }}</p>
+  {% if d.recap.removed %}
+  <details class="more">
+    <summary>{{ d.recap.removed }} sentence{{ 's' if d.recap.removed != 1 }} removed before you saw this</summary>
+    {% for f in d.recap.findings %}
+    <div class="card card--flag" style="margin-top:.6rem">
+      <p class="label label--quiet">Sentence {{ f.ordinal }}</p>
+      <p style="margin:0">{{ f.detail }}</p>
+      <p class="footnote">Rule: {{ f.kind }}. The sentence itself is not reprinted here.
+      Showing you what the guard caught would be a second way for it to reach the page.</p>
+    </div>
+    {% endfor %}
+  </details>
+  {% endif %}
+</section>
+
+<section class="block" id="medicines">
+  <p class="label">Said about medicines</p>
+  <h2>{{ d.meds|length }} medicine{{ 's' if d.meds|length != 1 }} came up</h2>
+  <p class="standfirst">Every row is nailed to the words that were used. Second Chair will
+  not tell you what to do with any of them.</p>
+
+  {% for m in d.meds %}
+  {% set chip = {'reduced':'chip--down', 'increased':'chip--up', 'stopped':'chip--stop', 'started':'chip--up', 'unchanged':'chip--same', 'unclear':'chip--unclear'}[m.kind] %}
+  <div class="card {{ 'card--flag' if m.kind == 'unclear' }}">
+    <div class="med">
+      <span class="chip {{ chip }}">{{ m.heading }}</span>
+      <div class="med__body">
+        <p class="med__name">{{ m.medicine }}</p>
+        {% if m.from_dose and m.to_dose and m.from_dose != m.to_dose %}
+          {# A strike and an arrow are silent to a screen reader, which would read
+             "10mg 5mg" and leave the direction to luck. On a dose that is not good
+             enough, so the words are there and hidden from sight only. #}
+          <p class="dose"><span class="vh">changed from </span><s>{{ m.from_dose }}</s>
+            <span aria-hidden="true">&rarr;</span><span class="vh"> to </span>
+            <strong>{{ m.to_dose }}</strong>{% if m.timing %}, {{ m.timing }}{% endif %}</p>
+        {% elif m.to_dose %}
+          <p class="dose"><strong>{{ m.to_dose }}</strong>{% if m.timing %}, {{ m.timing }}{% endif %}</p>
+        {% elif m.kind == 'unclear' %}
+          <p class="dose" style="color:var(--medium)">No dose was said clearly enough to write down.</p>
+          <p class="footnote">Named only by nickname in the recording. Which medicine this is
+          was not said out loud, and Second Chair will not guess at it.</p>
+        {% endif %}
+        {% if m.note %}<p class="footnote">{{ m.note }}</p>{% endif %}
+        <p class="quote">&ldquo;{{ m.quote }}&rdquo; <span class="cite">[u{{ m.utterance_index }}]</span></p>
+        {% set fixes = corrections.get(m.medicine|lower, []) %}
+        {% for fix in fixes %}
+        <div class="card card--note" style="margin-top:.7rem">
+          <p class="label">The clinic's summary says otherwise</p>
+          <p style="margin:0">{{ fix.note }}</p>
+        </div>
+        {% endfor %}
+        <details class="more">
+          <summary>{% if fixes %}Correct it again{% else %}The clinic's summary says something different{% endif %}</summary>
+          <form method="post" action="/correct" style="margin-top:.5rem">
+            <input type="hidden" name="target" value="{{ m.medicine|lower }}">
+            <div class="field">
+              <label for="fix-{{ loop.index }}">What the clinic's own summary says</label>
+              <input id="fix-{{ loop.index }}" type="text" name="note" required
+                     placeholder="e.g. the printed summary says 2.5mg from Monday, not tomorrow">
+              <p class="help">Your correction wins. It is what goes into the export and the
+              family summary, and the original stays underneath it.</p>
+            </div>
+            <button class="btn" type="submit">Save the correction</button>
+          </form>
+        </details>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty"><p>Nothing was said about a medicine in this appointment.</p></div>
+  {% endfor %}
+  <p class="provenance"><b>How this was made:</b> {{ d.meds_provenance }}</p>
+</section>
+
+<section class="block" id="questions">
+  <p class="label">The envelope in your pocket</p>
+  <h2>What you meant to ask</h2>
+  <p class="standfirst">Ordered by what you marked important when you wrote them down.
+  Second Chair does not decide which of your questions matters.</p>
+  <div class="card">
+    {% for q in d.questions|sort(attribute='marked_important', reverse=true) %}
+    {% set cls = {'covered':'q--covered', 'partly':'q--partly', 'not_covered':'q--missed'}[q.coverage] %}
+    {% set mark = {'covered':'✓', 'partly':'~', 'not_covered':'✗'}[q.coverage] %}
+    <div class="q {{ cls }}">
+      <span class="q__mark" aria-hidden="true">{{ mark }}</span>
+      <div>
+        <p class="q__text">{{ q.text }}{% if q.marked_important %}<span class="q__important">you marked this</span>{% endif %}</p>
+        <p class="q__meta">{{ q.heading }}</p>
+        {% if q.evidence_quote %}<p class="quote">&ldquo;{{ q.evidence_quote }}&rdquo; <span class="cite">[u{{ q.evidence_index }}]</span></p>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="provenance"><b>How this was made:</b> {{ d.questions_provenance }}</p>
+  {% if d.todos %}
+  <div class="card card--note">
+    <p class="label">Carried forward as Bee todos</p>
+    <ul style="margin:.3rem 0 0;padding-left:1.1rem">
+      {% for t in d.todos %}<li>{{ t }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</section>
+
+{% if d.collisions %}
+<section class="block" id="week">
+  <p class="label">From the rest of the week</p>
+  <h2>Things said elsewhere that touch this appointment</h2>
+  <p class="standfirst">This is the part a recorder on the table cannot do. These came from
+  Bee facts recorded on other days, set against what happened in the room.</p>
+  <div class="cards">
+  {% for c2 in d.collisions %}
+  <div class="card card--flag">
+    <h3>{{ c2.heading }}</h3>
+    <p class="footnote">{{ c2.week_date }}</p>
+    <p style="margin:.3rem 0 0">{{ c2.from_the_week }}</p>
+    <p class="quote">&ldquo;{{ c2.week_quote }}&rdquo;</p>
+    <p style="margin:.7rem 0 0">{{ c2.from_the_room }}</p>
+    {% if c2.room_quote %}<p class="quote">&ldquo;{{ c2.room_quote }}&rdquo;</p>{% endif %}
+  </div>
+  {% endfor %}
+  </div>
+  <p class="footnote">Second Chair states both recordings and stops. It does not say what
+  the pairing means, because that would be a clinical opinion and it does not have one.</p>
+</section>
+{% endif %}
+
+<section class="block" id="share">
+  <p class="label">For the person who could not come</p>
+  <h2>{{ d.relative.for_name|default('Your family') }}</h2>
+  {% if settings.share_enabled %}
+  <div class="card">
+    <p>A narrower document: the medicine rows, the dates, and what was not covered. No
+    transcript goes into it, because the announcement in the room asked whether you could
+    record this to remember it, not whether you could forward it.</p>
+    <p style="margin-top:.9rem;margin-bottom:0">
+      <a class="btn" href="/share">Open the family summary</a>
+      <a class="btn btn--ghost" href="/share.txt">Plain text</a>
+    </p>
+  </div>
+  {% else %}
+  <div class="empty"><p>Sharing is switched off in settings for this appointment.</p></div>
+  {% endif %}
+</section>
+
+<section class="block" id="dropped">
+  <p class="label label--quiet">The discard pile</p>
+  <h2>{{ result.dropped|length }} thing{{ 's' if result.dropped|length != 1 }}
+  {{ 'were' if result.dropped|length != 1 else 'was' }} heard and not kept</h2>
+  <p class="standfirst">The waiting room and the corridor. Shown because a product that
+  quietly decides what to throw away is asking to be trusted, and one that shows you the
+  pile has earned a little of it.</p>
+  <div class="card">
+    {% for dd in result.dropped %}
+    <div class="ev ev--dropped">
+      <span class="ev__tag">Not kept</span>
+      <div>
+        <p class="ev__text"><span class="speaker">{{ dd.utterance.speaker }}</span>{{ dd.utterance.text }}</p>
+        <p class="ev__why">{{ dd.reason }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <p style="margin-top:1rem"><a class="btn btn--ghost" href="/export.txt">Take this back to the clinic (plain text)</a></p>
+</section>
+
+{% endif %}
+{% endblock %}

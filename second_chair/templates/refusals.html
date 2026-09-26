@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% set seal_mark = 'The refusal log' %}
+{% set seal_what = 'Everything Second Chair declined to answer, kept where you can read it.' %}
+{% block title %}Second Chair: What it refused{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">Auditable</p>
+  <h1>What it refused</h1>
+  <p class="standfirst">A product that refuses things should be checkable about what it
+  refused, and to whom. Nothing here is deleted when the transcript expires.</p>
+</div>
+
+<section class="block">
+  {% if rows %}
+  <div class="tbl">
+    <table>
+      <tr><th>Asked</th><th>When</th></tr>
+      {% for r in rows %}
+      <tr>
+        <td><strong>{{ r.question }}</strong><br><span class="footnote">{{ r.answer }}</span></td>
+        <td>{{ r.created_at[:16].replace('T',' ') }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% else %}
+  <div class="empty">
+    <p>Nothing has been refused yet.</p>
+    <p class="footnote">Try the ask bar with something like
+    &ldquo;should I stop the amlodipine?&rdquo; or &ldquo;is this serious?&rdquo; and it
+    will appear here.</p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="block">
+  <p class="label label--quiet">The rules</p>
+  <h2>What counts as advice</h2>
+  <div class="card">
+    <ul>
+      <li>Anything of the form &ldquo;should I&rdquo;, &ldquo;can I&rdquo;, &ldquo;is it
+      safe to&rdquo;.</li>
+      <li>Anything asking how much to take, or what happens if a dose is missed, skipped or
+      doubled.</li>
+      <li>Anything asking whether a symptom is serious, normal, urgent or an emergency.</li>
+    </ul>
+    <p class="footnote">The same three rules run over the model's own recap before it is
+    displayed, and a sentence that trips one is removed whole rather than edited. The count
+    of removals is on the front page.</p>
+  </div>
+</section>
+{% endblock %}

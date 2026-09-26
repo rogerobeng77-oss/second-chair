@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Second Chair{% endblock %}</title>
+<link rel="stylesheet" href="/static/second-chair.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232A4B8D'/><rect x='9' y='7' width='14' height='18' fill='%23FBFBFC'/><rect x='12' y='12' width='8' height='2' fill='%232A4B8D'/><rect x='12' y='17' width='8' height='2' fill='%232A4B8D'/></svg>">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the record</a>
+
+{% set navitems = [
+  ('/', 'record.html', 'The record'),
+  ('/replay', 'replay.html', 'Replay'),
+  ('/consent', 'consent.html', 'Consent ledger'),
+  ('/share', 'share.html', 'For your family'),
+  ('/history', 'history.html', 'History'),
+  ('/refusals', 'refusals.html', 'What it refused'),
+  ('/settings', 'settings.html', 'Settings'),
+] %}
+
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="/"><i></i><span class="brand__text">Second Chair</span></a>
+
+    <details class="nav-toggle">
+      <summary><span class="nav-toggle__label">{% for href, key, label in navitems %}{% if nav == key %}{{ label }}{% endif %}{% endfor %}</span></summary>
+      <nav class="nav" aria-label="Sections">
+        {% for href, key, label in navitems %}
+        <a href="{{ href }}" {% if nav == key %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </details>
+
+    <nav class="nav" aria-label="Sections">
+      {% for href, key, label in navitems %}
+      <a href="{{ href }}" {% if nav == key %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <hr class="rule">
+    <footer>
+      Second Chair is not a medical record.<br>The clinic's own summary is the one
+      that counts.
+    </footer>
+  </aside>
+
+  <div class="main">
+    {% block seal %}
+    <header class="seal {{ seal_class|default('') }}">
+      <div class="seal__top">
+        <span class="seal__mark">{{ seal_mark|default('Second Chair') }}</span>
+        <a class="avatar" href="/settings" title="Settings">SC</a>
+      </div>
+      <div class="seal__banner">
+        <span class="seal__what">{{ seal_what|default('An appointment, written down with everybody in the room knowing.') }}</span>
+        {% block seal_extra %}{% endblock %}
+      </div>
+    </header>
+    {% endblock %}
+
+    <main id="main" class="body">
+      {% block body %}{% endblock %}
+      <p class="mocknote"><b>Mocked data.</b> {{ mock_note }} Bee's developer surface needs the
+      iOS app to sign in, so Second Chair mocks the <code>/v1/*</code> HTTP boundary and runs
+      the real client above it.</p>
+      <hr class="rule">
+      <p class="footnote">Second Chair is not a medical record. The clinic's own summary is the
+      one that counts. It will not tell you what dose to take, whether to skip one, or whether
+      a symptom is serious. MIT licensed.</p>
+    </main>
+  </div>
+</div>
+
+{% block askbar %}
+<div class="askbar">
+  <form method="post" action="/ask">
+    <label class="skip" for="ask-q">Ask the record a question</label>
+    <input id="ask-q" type="text" name="question" placeholder="Ask the record: what was said about the blood test?" required>
+    <button class="btn" type="submit">Ask</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

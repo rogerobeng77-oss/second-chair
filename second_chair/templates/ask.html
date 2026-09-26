@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% set seal_mark = 'Asked' if not answer.refused else 'Refused' %}
+{% set seal_class = 'seal--refused' if answer.refused else '' %}
+{% set seal_what = 'It answers by quoting the room, or it does not answer.' %}
+{% block title %}Second Chair: Ask{% endblock %}
+
+{% block body %}
+
+<div class="page-head">
+  <p class="label">You asked</p>
+  <h1>{{ question }}</h1>
+</div>
+
+<section class="block">
+  {% if answer.refused %}
+  <div class="attn">
+    <p class="label">Second Chair will not answer this</p>
+    <h2 style="margin-bottom:.4rem">{{ answer.text }}</h2>
+  </div>
+  <div class="card card--flag">
+    <p class="label">Why it refuses</p>
+    <p style="margin:0">A published study found potential harms in 18% of model-generated
+    discharge instructions. A language model can produce a fluent answer to
+    &ldquo;should I&rdquo; questions all day. Second Chair is a record, not a clinician, so
+    the refusal is in the code path before anything is searched, not in a disclaimer
+    underneath an answer.</p>
+    <p style="margin:.7rem 0 0" class="footnote">This refusal has been written to the log at
+    <a href="/refusals">what it refused</a>.</p>
+  </div>
+  {% else %}
+  <div class="card">
+    <p>{{ answer.text }}</p>
+  </div>
+  {% for q in answer.quotes %}
+  <div class="card">
+    <p class="lede" style="margin:0;text-align:left;max-width:none">&ldquo;{{ q[1] }}&rdquo; <span class="cite">[u{{ q[0] }}]</span></p>
+  </div>
+  {% else %}
+  <div class="empty"><p>Nothing in the record covers that.</p></div>
+  {% endfor %}
+  <p class="provenance"><b>How these were chosen:</b> {{ answer.how }}</p>
+  {% endif %}
+  <p style="margin-top:1.2rem"><a class="btn btn--ghost" href="/">Back to the record</a></p>
+</section>
+{% endblock %}
